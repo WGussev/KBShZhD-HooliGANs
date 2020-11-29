@@ -23,10 +23,10 @@ app = dash.Dash(__name__,
 server = app.server
 
 
-df_consumption = pd.read_csv('/home/gustav/Projects/KBShZhD/data/consumption.csv')
+df_consumption = pd.read_csv('./data/consumption.csv')
 
 
-FILENAME = "/home/gustav/Projects/KBShZhD/data/raw.xlsx"
+FILENAME = "./data/raw.xlsx"
 df = pd.read_excel(FILENAME)
 df['Date'] = pd.to_datetime(df['Date'])
 
