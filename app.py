@@ -127,7 +127,7 @@ app.layout = html.Div(
                              options=[{'label': 'все', 'value': 'all'}],
                              value='all'), className='pretty_container'),
             html.Center([
-                html.H2('общий расход'),
+                html.H2('общий перерасход'),
                 html.H2('-----', id='total-label', style={'font-weight': 'bold'}),
                 html.H2('литров')],
                 className='pretty_container')],
@@ -145,17 +145,8 @@ app.layout = html.Div(
         className="row flex-display",
     ),
     html.H2("Статистика расхода топлива"),
-    dcc.RangeSlider(id='date-slider',
-        min=1,
-        max=i,
-        value=[1, i],
-        step=1,
-        marks={
-            1: {'label': '01-10-2019'},
-            i: {'label': '31-07-2020'}
-        }),
     html.H5(children='     '),
-    generate_table(df)
+    html.Div(generate_table(df))
 ])
 
 # CALLBACKS
@@ -194,24 +185,27 @@ def update_output(list_of_contents, agg_col, second_level, list_of_names, list_o
 
     if second_level == 'all':
         df_total = df_calc.groupby(agg_col).sum().reset_index().sort_values(agg_col)
-        fig = bar(df_total, y=agg_col, x="volume",
-                  labels={"volume": "Расход топлива (л)",
+        fig = bar(df_total, y=agg_col, x=["volume_planned", "volume_factual"],
+                  labels={"volume_planned": "Расход топлива, план (л)",
+                          "volume_factual": "Расход топлива,  факт (л)",
                           agg_col: "Машина/работа"},
-                  title="Расход топлива", orientation='h',
-                  color_continuous_scale='reds',
-                  color="volume")
-        consumption = int(df_calc['volume'].sum())
+                  title="Расход топлива", orientation='h')
+                  # color_continuous_scale='reds',
+                  # color="volume_planned")
+        consumption = int(df_total['volume_factual'].sum() - df_calc['volume_planned'].sum())
+        fig.update_layout(barmode='group', yaxis={'categoryorder': 'total ascending'})
     else:
         df_subtotal = df_calc[df_calc[agg_col] == second_level].sort_values(agg_col)
-        fig = bar(df_subtotal, y=agg_col, x="volume",
-                  labels={"volume": "Расход топлива (л)",
+        fig = bar(df_subtotal, y="machine_number", x=["volume_planned", "volume_factual"],
+                  labels={"volume_planned": "Расход топлива, план (л)",
+                          "volume_factual": "Расход топлива,  факт (л)",
                           agg_col: "Машина/работа"},
-                  title="Расход топлива", orientation='h',
-                  color_continuous_scale='reds',
-                  color="volume")
-        consumption = int(df_subtotal['volume'].sum())
+                  title="Расход топлива", orientation='h')
+                  # color_continuous_scale='reds',
+                  # color="volume_planned")
+        consumption = int(df_subtotal['volume_factual'].sum()) - int(df_subtotal['volume_planned'].sum())
+        fig.update_layout(barmode='group', yaxis={'categoryorder': 'total ascending'})
 
-    fig.update_layout(barmode='stack', yaxis={'categoryorder': 'total ascending'})
     return str(consumption), fig, second_level_values
 
 
